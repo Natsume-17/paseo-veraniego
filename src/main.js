@@ -18,11 +18,11 @@ const geometry = new THREE.BoxGeometry(1, 1, 1);
 // material estándar que reacciona a la luz
 const material = new THREE.MeshStandardMaterial({ color: 0x2a9d8f });
 
-// luces
-const light = new THREE.DirectionalLight(0xffffff, 0.85);
+// --- luces ---
+const light = new THREE.DirectionalLight(0xffffff, 0.85); // luz principal (simula el sol)
 light.position.set(1, 1, 1);
 scene.add(light);
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.35); // suaviza zonas en sombra total
 scene.add(ambientLight);
 
 const cube = new THREE.Mesh(geometry, material);
