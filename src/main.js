@@ -15,8 +15,15 @@ camera.position.z = 5;
 // ancho, alto, profundidad
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 
-// material básico, no necesita luces para verse
-const material = new THREE.MeshBasicMaterial({ color: 0x2a9d8f });
+// material estándar que reacciona a la luz
+const material = new THREE.MeshStandardMaterial({ color: 0x2a9d8f });
+
+// luces
+const light = new THREE.DirectionalLight(0xffffff, 0.85);
+light.position.set(1, 1, 1);
+scene.add(light);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+scene.add(ambientLight);
 
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
