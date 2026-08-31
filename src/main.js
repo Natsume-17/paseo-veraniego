@@ -2,11 +2,12 @@ import "./style.css";
 import * as THREE from "three";
 
 const scene = new THREE.Scene();
+const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
 
 // Parámetros: fov, aspect ratio, near, far
 const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
+  fovHorizontalDeseado,
+  16 / 9,
   0.1,
   1000,
 );
@@ -28,23 +29,51 @@ scene.add(ambientLight);
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 
+// --- dibujado del canvas ---
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+const RENDER_WIDTH = 640;
+const RENDER_HEIGHT = 360;
+const ASPECT_RATIO = 16 / 9; // relación de aspecto deseada (16:9)
+
+camera.aspect = ASPECT_RATIO;
+
+const fovHorizontalRad = fovHorizontalDeseado * (Math.PI / 180); // convertir a radianes
+const fovVerticalRad =
+  2 * Math.atan(Math.tan(fovHorizontalRad / 2) / ASPECT_RATIO); // calcular el fov vertical en radianes
+camera.fov = fovVerticalRad * (180 / Math.PI); // volver a grados
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false); // tamaño fijo para mantener el efecto pixel art
 document.body.appendChild(renderer.domElement);
-window.addEventListener("resize", () => {
-  const aspect = window.innerWidth / window.innerHeight;
-  const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
 
-  camera.aspect = aspect;
+// Ajustar el tamaño del canvas al tamaño de la ventana manteniendo la relación de aspecto
+function updateCanvasSize() {
+  const windowAspect = window.innerWidth / window.innerHeight;
 
-  const fovHorizontalRad = fovHorizontalDeseado * (Math.PI / 180); // convertir a radianes
-  const fovVerticalRad = 2 * Math.atan(Math.tan(fovHorizontalRad / 2) / aspect); // calcular el fov vertical en radianes
-  camera.fov = fovVerticalRad * (180 / Math.PI); // volver a grados
+  let cssWidth, cssHeight;
 
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  if (windowAspect > ASPECT_RATIO) {
+    // la ventana es más ancha que 16:9 → la altura manda
+    cssHeight = window.innerHeight;
+    cssWidth = cssHeight * ASPECT_RATIO;
+  } else {
+    // la ventana es más alta/estrecha que 16:9 → el ancho manda
+    cssWidth = window.innerWidth;
+    cssHeight = cssWidth / ASPECT_RATIO;
+  }
 
+  renderer.domElement.style.width = `${cssWidth}px`;
+  renderer.domElement.style.height = `${cssHeight}px`;
+}
+
+// llamada directa, se aplica al cargar la página
+updateCanvasSize();
+
+// la misma función se reutiliza como callback del evento
+window.addEventListener("resize", updateCanvasSize);
+
+// --- animación ---
 function animate() {
   requestAnimationFrame(animate);
   cube.rotation.x += 0.01;

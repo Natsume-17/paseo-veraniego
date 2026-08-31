@@ -12,3 +12,7 @@ body {
   background-color: #111;
   color: #fff;
 }
+
+canvas {
+  image-rendering: pixelated; /* evita el suavizado al escalar el canvas de baja resolución (clave para el efecto pixel art) */
+}
