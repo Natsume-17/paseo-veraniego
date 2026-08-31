@@ -1,5 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
+import colors from "./colors.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
@@ -16,14 +17,28 @@ camera.position.z = 5;
 // ancho, alto, profundidad
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 
+// Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
+const gradientColors = new Uint8Array([0, 100, 180, 255]); // 4 bandas
+const gradientMap = new THREE.DataTexture(
+  gradientColors,
+  gradientColors.length,
+  1,
+  THREE.RedFormat,
+);
+gradientMap.magFilter = THREE.NearestFilter; // filtro que evita el suavizado entre píxeles de la textura
+gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene datos nuevos que procesar
+
 // material que divide en bandas discretas la iluminación
-const material = new THREE.MeshToonMaterial({ color: 0x2a9d8f });
+const material = new THREE.MeshToonMaterial({
+  color: colors.sea,
+  gradientMap: gradientMap,
+});
 
 // --- luces ---
-const light = new THREE.DirectionalLight(0xffffff, 0.85); // luz principal (simula el sol)
+const light = new THREE.DirectionalLight(colors.sun, 0.85); // luz principal (simula el sol)
 light.position.set(1, 1, 1);
 scene.add(light);
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.35); // suaviza zonas en sombra total
+const ambientLight = new THREE.AmbientLight(colors.foam, 0.35); // suaviza zonas en sombra total
 scene.add(ambientLight);
 
 const cube = new THREE.Mesh(geometry, material);
