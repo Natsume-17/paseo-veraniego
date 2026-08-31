@@ -16,8 +16,8 @@ camera.position.z = 5;
 // ancho, alto, profundidad
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 
-// material estándar que reacciona a la luz
-const material = new THREE.MeshStandardMaterial({ color: 0x2a9d8f });
+// material que divide en bandas discretas la iluminación
+const material = new THREE.MeshToonMaterial({ color: 0x2a9d8f });
 
 // --- luces ---
 const light = new THREE.DirectionalLight(0xffffff, 0.85); // luz principal (simula el sol)
