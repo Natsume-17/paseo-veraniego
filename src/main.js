@@ -1,6 +1,21 @@
+/**
+ * Paseo veraniego
+ * ----------------
+ * Punto de entrada de la aplicación. Configura la escena 3D y arranca
+ * el bucle de animación.
+ *
+ * Responsabilidades:
+ * - Inicializar Scene, Camera y Renderer.
+ * - Crear los objetos de la escena de prueba (cubo, suelo) y sus materiales.
+ * - Configurar la iluminación.
+ * - Delegar el ajuste de tamaño del canvas en sizing.js.
+ * - Ejecutar el bucle de animación (animate).
+ */
+
 import "./style.css";
 import * as THREE from "three";
 import colors from "./colors.js";
+import { updateCanvasSize } from "./sizing.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
@@ -12,7 +27,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.z = 5;
+camera.position.set(0, 2, 5); // colocar la cámara un poco elevada y alejada del cubo
+camera.lookAt(0, 0, 0); // mirar al origen de coordenadas (donde está el cubo y el suelo)
 
 // --- geometría y material del cubo ---
 // ancho, alto, profundidad
@@ -59,9 +75,6 @@ scene.add(light);
 const ambientLight = new THREE.AmbientLight(colors.foam, 0.35); // suaviza zonas en sombra total
 scene.add(ambientLight);
 
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-
 // --- dibujado del canvas ---
 const renderer = new THREE.WebGLRenderer();
 const RENDER_WIDTH = 640;
@@ -80,31 +93,13 @@ camera.updateProjectionMatrix();
 renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false); // tamaño fijo para mantener el efecto pixel art
 document.body.appendChild(renderer.domElement);
 
-// Ajustar el tamaño del canvas al tamaño de la ventana manteniendo la relación de aspecto
-function updateCanvasSize() {
-  const windowAspect = window.innerWidth / window.innerHeight;
-
-  let cssWidth, cssHeight;
-
-  if (windowAspect > ASPECT_RATIO) {
-    // la ventana es más ancha que 16:9 → la altura manda
-    cssHeight = window.innerHeight;
-    cssWidth = cssHeight * ASPECT_RATIO;
-  } else {
-    // la ventana es más alta/estrecha que 16:9 → el ancho manda
-    cssWidth = window.innerWidth;
-    cssHeight = cssWidth / ASPECT_RATIO;
-  }
-
-  renderer.domElement.style.width = `${cssWidth}px`;
-  renderer.domElement.style.height = `${cssHeight}px`;
-}
-
 // llamada directa, se aplica al cargar la página
-updateCanvasSize();
+updateCanvasSize(renderer, ASPECT_RATIO);
 
 // la misma función se reutiliza como callback del evento
-window.addEventListener("resize", updateCanvasSize);
+window.addEventListener("resize", () =>
+  updateCanvasSize(renderer, ASPECT_RATIO),
+);
 
 // --- animación ---
 function animate() {
