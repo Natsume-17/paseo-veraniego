@@ -14,6 +14,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 
+// --- geometría y material del cubo ---
 // ancho, alto, profundidad
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 
@@ -33,6 +34,23 @@ const material = new THREE.MeshToonMaterial({
   color: colors.sea,
   gradientMap: gradientMap,
 });
+
+// --- geometría y material del suelo ---
+// geometría de plano, ancho x alto
+const groundGeometry = new THREE.PlaneGeometry(30, 30);
+
+// Reutilizamos MeshToonMaterial, igual que en el cubo, pero con el color «sand» de la paleta
+const groundMaterial = new THREE.MeshToonMaterial({
+  color: colors.sand,
+  gradientMap: gradientMap, // la misma textura de gradiente que ya tenemos
+});
+
+const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+
+// eje a rotar para que el plano quede horizontal
+ground.rotation.x = -Math.PI / 2; // 90 grados en radianes
+
+scene.add(ground);
 
 // --- luces ---
 const light = new THREE.DirectionalLight(colors.sun, 0.85); // luz principal (simula el sol)
