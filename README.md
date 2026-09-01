@@ -7,6 +7,11 @@ Proyecto personal de portfolio: una experiencia interactiva de exploración con 
 - Three.js
 - Vite
 
+## Arquitectura / organización del código
+
+- `colors.js`: gestiona la paleta de colores de los materiales y luces de la escena 3D.
+- `sizing.js`: gestiona el ajuste del tamaño del canvas a la ventana, manteniendo el aspect ratio fijo.
+
 ## Progreso
 
 ### Fase 1 — Proyecto mínimo
@@ -27,5 +32,6 @@ Proyecto personal de portfolio: una experiencia interactiva de exploración con 
 - CSS `image-rendering: pixelated` para bordes nítidos al escalar
 - Material toon (`MeshToonMaterial`) con gradiente de 4 bandas para sombreado por bloques
 - Paleta de colores centralizada (`colors.js`) aplicada a materiales y luces
+- Suelo y cielo básicos para dar composición a la escena de prueba
 
 🚧 En desarrollo.
