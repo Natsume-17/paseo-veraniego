@@ -51,6 +51,10 @@ const material = new THREE.MeshToonMaterial({
   gradientMap: gradientMap,
 });
 
+const cube = new THREE.Mesh(geometry, material);
+cube.position.set(0, 0.5, 0); // elevar el cubo para que no quede enterrado en el suelo
+scene.add(cube);
+
 // --- geometría y material del suelo ---
 // geometría de plano, ancho x alto
 const groundGeometry = new THREE.PlaneGeometry(30, 30);
