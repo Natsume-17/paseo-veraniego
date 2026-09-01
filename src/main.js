@@ -6,7 +6,7 @@
  *
  * Responsabilidades:
  * - Inicializar Scene, Camera y Renderer.
- * - Crear los objetos de la escena de prueba (cubo, suelo, cielo) y sus materiales.
+ * - Crear los objetos de la escena (personaje, suelo, cielo) y sus materiales.
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
  * - Ejecutar el bucle de animación (animate).
@@ -28,11 +28,7 @@ const camera = new THREE.PerspectiveCamera(
   1000,
 );
 camera.position.set(0, 2, 5); // colocar la cámara un poco elevada y alejada del cubo
-camera.lookAt(0, 0, 0); // mirar al origen de coordenadas (donde está el cubo y el suelo)
-
-// --- geometría y material del cubo ---
-// ancho, alto, profundidad
-const geometry = new THREE.BoxGeometry(1, 1, 1);
+camera.lookAt(0, 0, 0); // mirar al origen de coordenadas (donde está el personaje y el suelo)
 
 // Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
 const gradientColors = new Uint8Array([0, 100, 180, 255]); // 4 bandas
@@ -45,20 +41,12 @@ const gradientMap = new THREE.DataTexture(
 gradientMap.magFilter = THREE.NearestFilter; // filtro que evita el suavizado entre píxeles de la textura
 gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene datos nuevos que procesar
 
-// material que divide en bandas discretas la iluminación
-const material = new THREE.MeshToonMaterial({
-  color: colors.sea,
-  gradientMap: gradientMap,
-});
-
-const cube = new THREE.Mesh(geometry, material);
-cube.position.set(0, 0.5, 0); // elevar el cubo para que no quede enterrado en el suelo
-scene.add(cube);
+const personCharacter = createPersonCharacter(colorsPerson, gradientMap);
+scene.add(personCharacter);
 
 // --- geometría y material del suelo ---
-// geometría de plano, ancho x alto
+// ancho, alto
 const groundGeometry = new THREE.PlaneGeometry(30, 30);
-
 // Reutilizamos MeshToonMaterial, igual que en el cubo, pero con el color «sand» de la paleta
 const groundMaterial = new THREE.MeshToonMaterial({
   color: colors.sand,
@@ -66,10 +54,8 @@ const groundMaterial = new THREE.MeshToonMaterial({
 });
 
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-
 // eje a rotar para que el plano quede horizontal
 ground.rotation.x = -Math.PI / 2; // 90 grados en radianes
-
 scene.add(ground);
 
 // --- fondo de la escena ---
@@ -112,8 +98,6 @@ window.addEventListener("resize", () =>
 // --- animación ---
 function animate() {
   requestAnimationFrame(animate);
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
   renderer.render(scene, camera);
 }
 
