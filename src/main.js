@@ -6,7 +6,7 @@
  *
  * Responsabilidades:
  * - Inicializar Scene, Camera y Renderer.
- * - Crear los objetos de la escena de prueba (cubo, suelo) y sus materiales.
+ * - Crear los objetos de la escena de prueba (cubo, suelo, cielo) y sus materiales.
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
  * - Ejecutar el bucle de animación (animate).
@@ -71,6 +71,10 @@ const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2; // 90 grados en radianes
 
 scene.add(ground);
+
+// --- fondo de la escena ---
+// añadimos un color de fondo al cielo, que se verá en las zonas donde no haya geometría
+scene.background = new THREE.Color(colors.sky);
 
 // --- luces ---
 const light = new THREE.DirectionalLight(colors.sun, 0.85); // luz principal (simula el sol)
