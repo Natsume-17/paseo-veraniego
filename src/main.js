@@ -14,8 +14,9 @@
 
 import "./style.css";
 import * as THREE from "three";
-import colors from "./colors.js";
+import { colors, colorsPerson } from "./colors.js";
 import { updateCanvasSize } from "./sizing.js";
+import { createPersonCharacter } from "./characters/person.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
@@ -27,7 +28,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.set(0, 2, 5); // colocar la cámara un poco elevada y alejada del cubo
+camera.position.set(0, 3, 8); // colocar la cámara un poco elevada y alejada
 camera.lookAt(0, 0, 0); // mirar al origen de coordenadas (donde está el personaje y el suelo)
 
 // Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
@@ -42,6 +43,7 @@ gradientMap.magFilter = THREE.NearestFilter; // filtro que evita el suavizado en
 gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene datos nuevos que procesar
 
 const personCharacter = createPersonCharacter(colorsPerson, gradientMap);
+personCharacter.position.y = 0.9; // eleva el grupo para que el calzado toque el suelo
 scene.add(personCharacter);
 
 // --- geometría y material del suelo ---
