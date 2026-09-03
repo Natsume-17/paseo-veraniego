@@ -38,4 +38,11 @@ const colorsPerson = {
   mouth: 0xe76f51,
 };
 
-export { colors, colorsLighthouse, colorsPerson };
+const colorsCat = {
+  fur: 0x264653, // color principal del pelaje para cuerpo, cabeza, orejas, patas y cola
+  furLight: 0x588157, // color secundario del pelaje para detalles
+  eyes: 0xe9c46a,
+  nose: 0xe76f51,
+};
+
+export { colors, colorsLighthouse, colorsPerson, colorsCat };

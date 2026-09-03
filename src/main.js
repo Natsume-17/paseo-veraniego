@@ -14,9 +14,10 @@
 
 import "./style.css";
 import * as THREE from "three";
-import { colors, colorsPerson } from "./colors.js";
+import { colors, colorsPerson, colorsCat } from "./colors.js";
 import { updateCanvasSize } from "./sizing.js";
 import { createPersonCharacter } from "./characters/person.js";
+import { createCatCharacter } from "./characters/cat.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
@@ -45,6 +46,10 @@ gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene dato
 const personCharacter = createPersonCharacter(colorsPerson, gradientMap);
 personCharacter.position.y = 0.9; // eleva el grupo para que el calzado toque el suelo
 scene.add(personCharacter);
+
+const catCharacter = createCatCharacter(colorsCat, gradientMap);
+catCharacter.position.set(1, 0.325, 0); // eleva el grupo para que las patas toquen el suelo
+scene.add(catCharacter);
 
 // --- geometría y material del suelo ---
 // ancho, alto
