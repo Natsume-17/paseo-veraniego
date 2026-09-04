@@ -14,10 +14,11 @@
 
 import "./style.css";
 import * as THREE from "three";
-import { colors, colorsPerson, colorsCat } from "./colors.js";
+import { colors, colorsPerson, colorsCat, colorsDrone } from "./colors.js";
 import { updateCanvasSize } from "./sizing.js";
 import { createPersonCharacter } from "./characters/person.js";
 import { createCatCharacter } from "./characters/cat.js";
+import { createDroneCharacter } from "./characters/drone.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
@@ -43,6 +44,7 @@ const gradientMap = new THREE.DataTexture(
 gradientMap.magFilter = THREE.NearestFilter; // filtro que evita el suavizado entre píxeles de la textura
 gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene datos nuevos que procesar
 
+// --- personajes ---
 const personCharacter = createPersonCharacter(colorsPerson, gradientMap);
 personCharacter.position.y = 0.9; // eleva el grupo para que el calzado toque el suelo
 scene.add(personCharacter);
@@ -50,6 +52,10 @@ scene.add(personCharacter);
 const catCharacter = createCatCharacter(colorsCat, gradientMap);
 catCharacter.position.set(1, 0.325, 0); // eleva el grupo para que las patas toquen el suelo
 scene.add(catCharacter);
+
+const droneCharacter = createDroneCharacter(colorsDrone, gradientMap);
+droneCharacter.position.set(-1, 1.5, 0); // el dron está volando, así que se coloca más alto
+scene.add(droneCharacter);
 
 // --- geometría y material del suelo ---
 // ancho, alto

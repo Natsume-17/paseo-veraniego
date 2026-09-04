@@ -45,4 +45,11 @@ const colorsCat = {
   nose: 0xe76f51,
 };
 
-export { colors, colorsLighthouse, colorsPerson, colorsCat };
+const colorsDrone = {
+  body: 0x264653, // color principal del cuerpo/núcleo
+  arms: colors.stone, // reutiliza el gris piedra para los brazos
+  propeller: 0x2a9d8f, // color de las hélices
+  light: colors.sun, // reutiliza el mismo amarillo cálido del sol
+};
+
+export { colors, colorsLighthouse, colorsPerson, colorsCat, colorsDrone };
