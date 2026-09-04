@@ -9,8 +9,9 @@ Proyecto personal de portfolio: una experiencia interactiva de exploración con 
 
 ## Arquitectura / organización del código
 
-- `colors.js`: gestiona la paleta de colores de los materiales y luces de la escena 3D.
+- `colors.js`: paleta de colores centralizada, organizada por categorías (entorno, faro, personajes).
 - `sizing.js`: gestiona el ajuste del tamaño del canvas a la ventana, manteniendo el aspect ratio fijo.
+- `characters/`: un archivo por personaje (`person.js`, `cat.js`, `drone.js`), cada uno con una función `createXCharacter(colors, gradientMap)` que construye y devuelve un `THREE.Group`.
 
 ## Progreso
 
@@ -33,5 +34,15 @@ Proyecto personal de portfolio: una experiencia interactiva de exploración con 
 - Material toon (`MeshToonMaterial`) con gradiente de 4 bandas para sombreado por bloques
 - Paleta de colores centralizada (`colors.js`) aplicada a materiales y luces
 - Suelo y cielo básicos para dar composición a la escena de prueba
+
+### Fase 4 — Personajes
+
+- Tres personajes construidos con geometría simple estilo «Minecraft» (piezas diferenciadas agrupadas en `THREE.Group`):
+  - **Person**: torso, cabeza, brazos, piernas, calzado, pelo, ojos y boca
+  - **Cat**: cuerpo, cabeza, orejas, patas, cola, ojos y nariz
+  - **Drone**: cuerpo, brazos inclinados, hélices y luz indicadora
+- Posicionamiento de piezas mediante el patrón «borde + mitad» (edge + mitad de la pieza adyacente)
+- Rasgos faciales resueltos con `PlaneGeometry`, orientados según la cara visible de cada personaje
+- Los tres personajes coexisten en la escena de prueba, apoyados correctamente sobre el suelo
 
 🚧 En desarrollo.
