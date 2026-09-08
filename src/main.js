@@ -23,7 +23,7 @@ import { keysPressed } from "./input.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
-const moveSpeed = 0.05;
+const moveSpeed = 0.02;
 
 // Parámetros: fov, aspect ratio, near, far
 const camera = new THREE.PerspectiveCamera(
@@ -175,13 +175,13 @@ function animate() {
       keysPressed["ArrowRight"])
   ) {
     // avanza la fase de la oscilación
-    walkCycle += 0.1;
+    walkCycle += 0.04;
     // aplica la oscilación a piernas en fase opuesta entre sí
-    personCharacter.legLeft.rotation.x = Math.sin(walkCycle) * 0.5;
-    personCharacter.legRight.rotation.x = -Math.sin(walkCycle) * 0.5;
+    personCharacter.legLeft.rotation.x = Math.sin(walkCycle) * 0.2;
+    personCharacter.legRight.rotation.x = -Math.sin(walkCycle) * 0.2;
     // aplica la oscilación a brazos en fase opuesta a las piernas del mismo lado
-    personCharacter.armLeft.rotation.x = -Math.sin(walkCycle) * 0.5;
-    personCharacter.armRight.rotation.x = Math.sin(walkCycle) * 0.5;
+    personCharacter.armLeft.rotation.x = -Math.sin(walkCycle) * 0.2;
+    personCharacter.armRight.rotation.x = Math.sin(walkCycle) * 0.2;
   } else if (
     activeCharacter === personCharacter &&
     (keysPressed["KeyS"] || keysPressed["ArrowDown"])
@@ -220,7 +220,7 @@ function animate() {
     catCharacter.legFrontRight.rotation.z = -Math.sin(walkCycle) * 0.25;
     catCharacter.legBackLeft.rotation.z = -Math.sin(walkCycle) * 0.25;
     // cola con oscilación más rápida/amplia al caminar
-    tailCycle += 0.3;
+    tailCycle += 0.12;
     catCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.5;
   } else if (activeCharacter === catCharacter) {
     // neutral cuando Cat está activo pero no se mueve
@@ -229,7 +229,7 @@ function animate() {
     catCharacter.legBackLeft.rotation.z = 0;
     catCharacter.legBackRight.rotation.z = 0;
     // cola con oscilación lenta y sutil en reposo
-    tailCycle += 0.1;
+    tailCycle += 0.04;
     catCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.25;
   }
 
