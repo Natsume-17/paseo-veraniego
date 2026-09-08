@@ -141,5 +141,12 @@ export function createCatCharacter(colorsCat, gradientMap) {
   nose.rotation.y = Math.PI / 2; // misma rotación que los ojos
   catCharacter.add(nose);
 
+  // patas y cola como propiedades del grupo para poder animarlas desde fuera
+  catCharacter.legFrontLeft = legFrontLeft;
+  catCharacter.legFrontRight = legFrontRight;
+  catCharacter.legBackLeft = legBackLeft;
+  catCharacter.legBackRight = legBackRight;
+  catCharacter.tail = tail;
+
   return catCharacter;
 }

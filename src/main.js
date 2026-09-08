@@ -82,6 +82,7 @@ let isJumping = false;
 let blinkCounter = 0; // contador de frames para el parpadeo del dron
 const blinkInterval = 30; // frames entre cada parpadeo (medio segundo a 60fps)
 let walkCycle = 0; // controla la fase de la oscilación del caminar
+let tailCycle = 0; // controla la oscilación de la cola, avanza siempre que Cat esté activo
 
 window.addEventListener("keydown", (event) => {
   if (event.code === "ArrowUp" || event.code === "KeyW") {
@@ -158,6 +159,7 @@ function animate() {
     activeCharacter.position.x += moveSpeed;
   }
 
+  // animaciones del personaje persona (piernas y brazos) según su estado
   if (isJumping && activeCharacter === personCharacter) {
     // piernas recogidas (rotación fija hacia atrás)
     personCharacter.legLeft.rotation.x = 0.65;
@@ -193,6 +195,42 @@ function animate() {
     personCharacter.legRight.rotation.x = 0;
     personCharacter.armLeft.rotation.x = 0;
     personCharacter.armRight.rotation.x = 0;
+  }
+
+  // animaciones del personaje gato (patas y cola) según su estado
+  if (isJumping && activeCharacter === catCharacter) {
+    // las cuatro patas recogidas hacia el cuerpo, mismo signo (pose simétrica)
+    catCharacter.legFrontLeft.rotation.z = 0.25;
+    catCharacter.legBackRight.rotation.z = 0.25;
+    catCharacter.legFrontRight.rotation.z = 0.25;
+    catCharacter.legBackLeft.rotation.z = 0.25;
+    // cola elevada respecto a su ángulo base (-Math.PI / 6), fija (sin oscilación)
+    catCharacter.tail.rotation.y = 0.25;
+  } else if (
+    activeCharacter === catCharacter &&
+    (keysPressed["KeyA"] ||
+      keysPressed["ArrowLeft"] ||
+      keysPressed["KeyD"] ||
+      keysPressed["ArrowRight"])
+  ) {
+    walkCycle += 0.1;
+    // patas en patrón diagonal (delantera-izq + trasera-der en fase; delantera-der + trasera-izq en fase opuesta)
+    catCharacter.legFrontLeft.rotation.z = Math.sin(walkCycle) * 0.25;
+    catCharacter.legBackRight.rotation.z = Math.sin(walkCycle) * 0.25;
+    catCharacter.legFrontRight.rotation.z = -Math.sin(walkCycle) * 0.25;
+    catCharacter.legBackLeft.rotation.z = -Math.sin(walkCycle) * 0.25;
+    // cola con oscilación más rápida/amplia al caminar
+    tailCycle += 0.3;
+    catCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.5;
+  } else if (activeCharacter === catCharacter) {
+    // neutral cuando Cat está activo pero no se mueve
+    catCharacter.legFrontLeft.rotation.z = 0;
+    catCharacter.legFrontRight.rotation.z = 0;
+    catCharacter.legBackLeft.rotation.z = 0;
+    catCharacter.legBackRight.rotation.z = 0;
+    // cola con oscilación lenta y sutil en reposo
+    tailCycle += 0.1;
+    catCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.25;
   }
 
   // límites de altura del dron (para no subir/bajar sin límite)
