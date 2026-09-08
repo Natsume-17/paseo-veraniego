@@ -19,9 +19,11 @@ import { updateCanvasSize } from "./sizing.js";
 import { createPersonCharacter } from "./characters/person.js";
 import { createCatCharacter } from "./characters/cat.js";
 import { createDroneCharacter } from "./characters/drone.js";
+import { keysPressed } from "./input.js";
 
 const scene = new THREE.Scene();
 const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
+const moveSpeed = 0.05;
 
 // Parámetros: fov, aspect ratio, near, far
 const camera = new THREE.PerspectiveCamera(
@@ -56,6 +58,38 @@ scene.add(catCharacter);
 const droneCharacter = createDroneCharacter(colorsDrone, gradientMap);
 droneCharacter.position.set(-1, 1.5, 0); // el dron está volando, así que se coloca más alto
 scene.add(droneCharacter);
+
+// array de personajes y control de personaje activo
+const characters = [personCharacter, catCharacter, droneCharacter];
+let activeIndex = 0;
+let activeCharacter = characters[activeIndex];
+
+window.addEventListener("keydown", (event) => {
+  if (event.code === "Space") {
+    activeIndex = (activeIndex + 1) % characters.length;
+    activeCharacter = characters[activeIndex];
+  }
+});
+
+// altura de suelo de cada personaje (para saber cuándo ha aterrizado)
+personCharacter.groundY = 0.9;
+catCharacter.groundY = 0.325;
+droneCharacter.groundY = 1.5; // el dron no salta, pero por consistencia
+
+const gravity = -0.01; // negativa, pequeña
+let verticalVelocity = 0;
+let isJumping = false;
+
+window.addEventListener("keydown", (event) => {
+  if (event.code === "ArrowUp" || event.code === "KeyW") {
+    if (activeCharacter === droneCharacter) {
+      // evita que cuando se elija el dron se pueda hacer saltar
+    } else if (!isJumping) {
+      verticalVelocity = 0.15; // impulso inicial hacia arriba
+      isJumping = true;
+    }
+  }
+});
 
 // --- geometría y material del suelo ---
 // ancho, alto
@@ -111,6 +145,54 @@ window.addEventListener("resize", () =>
 // --- animación ---
 function animate() {
   requestAnimationFrame(animate);
+  if (keysPressed["KeyA"] || keysPressed["ArrowLeft"]) {
+    activeCharacter.position.x -= moveSpeed;
+  }
+
+  if (keysPressed["KeyD"] || keysPressed["ArrowRight"]) {
+    activeCharacter.position.x += moveSpeed;
+  }
+  // límites de altura del dron (para no subir/bajar sin límite)
+  const droneMinY = 0.8;
+  const droneMaxY = 2.5;
+
+  if (activeCharacter === droneCharacter) {
+    if (keysPressed["KeyW"] || keysPressed["ArrowUp"]) {
+      if (activeCharacter.position.y < droneMaxY) {
+        activeCharacter.position.y += moveSpeed;
+      }
+    }
+    if (keysPressed["KeyS"] || keysPressed["ArrowDown"]) {
+      if (activeCharacter.position.y > droneMinY) {
+        activeCharacter.position.y -= moveSpeed;
+      }
+    }
+  }
+  // escala de agachado para el personaje persona
+  const crouchScale = 0.6; // reduce la altura al 60 %
+
+  if (activeCharacter === personCharacter) {
+    if (keysPressed["KeyS"] || keysPressed["ArrowDown"]) {
+      activeCharacter.scale.y = crouchScale;
+      // ajusta la posición para que los pies sigan en el suelo
+      activeCharacter.position.y = activeCharacter.groundY * crouchScale;
+    } else if (!isJumping) {
+      // solo resetea si no está saltando
+      activeCharacter.scale.y = 1;
+      activeCharacter.position.y = activeCharacter.groundY;
+    }
+  }
+  if (isJumping) {
+    verticalVelocity += gravity;
+    activeCharacter.position.y += verticalVelocity;
+
+    // si ha llegado o pasado su altura de suelo, aterriza
+    if (activeCharacter.position.y <= activeCharacter.groundY) {
+      activeCharacter.position.y = activeCharacter.groundY;
+      isJumping = false;
+      verticalVelocity = 0;
+    }
+  }
   renderer.render(scene, camera);
 }
 
