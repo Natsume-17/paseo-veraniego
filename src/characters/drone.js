@@ -55,10 +55,12 @@ export function createDroneCharacter(colorsDrone, gradientMap) {
   // x: en el extremo exterior de armRight
   // y: ajustado visualmente para acompañar la inclinación del brazo (rotation.z)
   propellerRight.position.set(0.3, 0.07, 0);
+  propellerRight.rotation.z = 0.05; // inclinación fija para que el giro en Y sea perceptible
   droneCharacter.add(propellerRight);
 
   const propellerLeft = new THREE.Mesh(propellerGeometry, propellerMaterial);
   propellerLeft.position.set(-0.3, 0.07, 0);
+  propellerLeft.rotation.z = 0.05;
   droneCharacter.add(propellerLeft);
 
   // --- luz indicadora ---
@@ -72,6 +74,11 @@ export function createDroneCharacter(colorsDrone, gradientMap) {
   // y: bajo el cuerpo, medio «lightGeometry» por debajo de su borde inferior
   indicatorLight.position.set(0, -0.065, 0);
   droneCharacter.add(indicatorLight);
+
+  // hélices y luz indicadora como propiedades del grupo para poder animarlas desde fuera
+  droneCharacter.propellerRight = propellerRight;
+  droneCharacter.propellerLeft = propellerLeft;
+  droneCharacter.indicatorLight = indicatorLight;
 
   return droneCharacter;
 }

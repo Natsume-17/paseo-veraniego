@@ -79,6 +79,8 @@ droneCharacter.groundY = 1.5; // el dron no salta, pero por consistencia
 const gravity = -0.01; // negativa, pequeña
 let verticalVelocity = 0;
 let isJumping = false;
+let blinkCounter = 0; // contador de frames para el parpadeo del dron
+const blinkInterval = 30; // frames entre cada parpadeo (medio segundo a 60fps)
 
 window.addEventListener("keydown", (event) => {
   if (event.code === "ArrowUp" || event.code === "KeyW") {
@@ -152,6 +154,7 @@ function animate() {
   if (keysPressed["KeyD"] || keysPressed["ArrowRight"]) {
     activeCharacter.position.x += moveSpeed;
   }
+
   // límites de altura del dron (para no subir/bajar sin límite)
   const droneMinY = 0.8;
   const droneMaxY = 2.5;
@@ -168,6 +171,7 @@ function animate() {
       }
     }
   }
+
   // escala de agachado para el personaje persona
   const crouchScale = 0.6; // reduce la altura al 60 %
 
@@ -182,6 +186,7 @@ function animate() {
       activeCharacter.position.y = activeCharacter.groundY;
     }
   }
+
   if (isJumping) {
     verticalVelocity += gravity;
     activeCharacter.position.y += verticalVelocity;
@@ -193,6 +198,21 @@ function animate() {
       verticalVelocity = 0;
     }
   }
+
+  // animación de las hélices  y la luz indicadora del dron
+  // rotación continua de las hélices sobre su propio eje vertical
+  droneCharacter.propellerRight.rotation.y += 0.3;
+  droneCharacter.propellerLeft.rotation.y += 0.3;
+
+  // incrementa el contador cada frame
+  blinkCounter++;
+  // si alcanza el intervalo, alterna visibilidad y resetea el contador
+  if (blinkCounter >= blinkInterval) {
+    droneCharacter.indicatorLight.visible =
+      !droneCharacter.indicatorLight.visible;
+    blinkCounter = 0;
+  }
+
   renderer.render(scene, camera);
 }
 
