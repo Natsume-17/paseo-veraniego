@@ -142,5 +142,11 @@ export function createPersonCharacter(colorsPerson, gradientMap) {
   shoeRight.position.set(-0.1, -0.85, 0);
   personCharacter.add(shoeRight);
 
+  // piernas y brazos como propiedades del grupo para poder animarlas desde fuera
+  personCharacter.legLeft = legLeft;
+  personCharacter.legRight = legRight;
+  personCharacter.armLeft = armLeft;
+  personCharacter.armRight = armRight;
+
   return personCharacter;
 }

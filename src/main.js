@@ -81,11 +81,12 @@ let verticalVelocity = 0;
 let isJumping = false;
 let blinkCounter = 0; // contador de frames para el parpadeo del dron
 const blinkInterval = 30; // frames entre cada parpadeo (medio segundo a 60fps)
+let walkCycle = 0; // controla la fase de la oscilación del caminar
 
 window.addEventListener("keydown", (event) => {
   if (event.code === "ArrowUp" || event.code === "KeyW") {
     if (activeCharacter === droneCharacter) {
-      // evita que cuando se elija el dron se pueda hacer saltar
+      // evita que cuando se elija el dron pueda saltar
     } else if (!isJumping) {
       verticalVelocity = 0.15; // impulso inicial hacia arriba
       isJumping = true;
@@ -147,12 +148,51 @@ window.addEventListener("resize", () =>
 // --- animación ---
 function animate() {
   requestAnimationFrame(animate);
+
+  // movimiento lateral del personaje activo
   if (keysPressed["KeyA"] || keysPressed["ArrowLeft"]) {
     activeCharacter.position.x -= moveSpeed;
   }
 
   if (keysPressed["KeyD"] || keysPressed["ArrowRight"]) {
     activeCharacter.position.x += moveSpeed;
+  }
+
+  if (isJumping && activeCharacter === personCharacter) {
+    // piernas recogidas (rotación fija hacia atrás)
+    personCharacter.legLeft.rotation.x = 0.65;
+    personCharacter.legRight.rotation.x = 0.65;
+    // brazos ligeramente elevados (rotación fija hacia adelante/arriba)
+    personCharacter.armLeft.rotation.x = -0.5;
+    personCharacter.armRight.rotation.x = -0.5;
+  } else if (
+    activeCharacter === personCharacter &&
+    (keysPressed["KeyA"] ||
+      keysPressed["ArrowLeft"] ||
+      keysPressed["KeyD"] ||
+      keysPressed["ArrowRight"])
+  ) {
+    // avanza la fase de la oscilación
+    walkCycle += 0.1;
+    // aplica la oscilación a piernas en fase opuesta entre sí
+    personCharacter.legLeft.rotation.x = Math.sin(walkCycle) * 0.5;
+    personCharacter.legRight.rotation.x = -Math.sin(walkCycle) * 0.5;
+    // aplica la oscilación a brazos en fase opuesta a las piernas del mismo lado
+    personCharacter.armLeft.rotation.x = -Math.sin(walkCycle) * 0.5;
+    personCharacter.armRight.rotation.x = Math.sin(walkCycle) * 0.5;
+  } else if (
+    activeCharacter === personCharacter &&
+    (keysPressed["KeyS"] || keysPressed["ArrowDown"])
+  ) {
+    // brazos ligeramente recogidos hacia el cuerpo (piernas ya se comprimen con scale.y)
+    personCharacter.armLeft.rotation.x = -0.5;
+    personCharacter.armRight.rotation.x = -0.5;
+  } else {
+    // si no se mueve, todo vuelve a su posición neutral (0)
+    personCharacter.legLeft.rotation.x = 0;
+    personCharacter.legRight.rotation.x = 0;
+    personCharacter.armLeft.rotation.x = 0;
+    personCharacter.armRight.rotation.x = 0;
   }
 
   // límites de altura del dron (para no subir/bajar sin límite)
