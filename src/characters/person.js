@@ -133,14 +133,14 @@ export function createPersonCharacter(colorsPerson, gradientMap) {
   });
 
   const shoeLeft = new THREE.Mesh(shoeGeometry, shoeMaterial);
-  // x: misma separación que la pierna izquierda
-  // y: cuelga desde el borde inferior de la pierna (y = -0.55 - 0.25 = -0.8) hacia abajo
-  shoeLeft.position.set(0.1, -0.85, 0);
-  personCharacter.add(shoeLeft);
+  // el calzado es relativo a la pierna
+  // y: mitad de la altura de la pierna (-0.25) - mitad de la altura del calzado (0.05) = -0.3
+  shoeLeft.position.set(0, -0.3, 0);
+  legLeft.add(shoeLeft);
 
   const shoeRight = new THREE.Mesh(shoeGeometry, shoeMaterial);
-  shoeRight.position.set(-0.1, -0.85, 0);
-  personCharacter.add(shoeRight);
+  shoeRight.position.set(0, -0.3, 0);
+  legRight.add(shoeRight);
 
   // piernas y brazos como propiedades del grupo para poder animarlas desde fuera
   personCharacter.legLeft = legLeft;
