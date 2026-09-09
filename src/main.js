@@ -71,14 +71,21 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
+// --- propiedades de salto y gravedad ---
 // altura de suelo de cada personaje (para saber cuándo ha aterrizado)
 personCharacter.groundY = 0.9;
 catCharacter.groundY = 0.325;
 droneCharacter.groundY = 1.5; // el dron no salta, pero por consistencia
+// velocidad vertical y estado de salto, solo para los personajes que saltan
+// droneCharacter no las lleva a propósito: su isJumping queda undefined (falsy),
+// así que el bloque de gravedad lo ignora automáticamente sin necesidad de un guard extra
+personCharacter.verticalVelocity = 0;
+personCharacter.isJumping = false;
+catCharacter.verticalVelocity = 0;
+catCharacter.isJumping = false;
 
+// --- variables globales ---
 const gravity = -0.01; // negativa, pequeña
-let verticalVelocity = 0;
-let isJumping = false;
 let blinkCounter = 0; // contador de frames para el parpadeo del dron
 const blinkInterval = 30; // frames entre cada parpadeo (medio segundo a 60fps)
 let walkCycle = 0; // controla la fase de la oscilación del caminar
@@ -265,17 +272,20 @@ function animate() {
     }
   }
 
-  if (isJumping) {
-    verticalVelocity += gravity;
-    activeCharacter.position.y += verticalVelocity;
+  // aplica la gravedad a cada personaje, esté activo o no
+  characters.forEach((character) => {
+    if (character.isJumping) {
+      character.verticalVelocity += gravity;
+      character.position.y += character.verticalVelocity;
 
-    // si ha llegado o pasado su altura de suelo, aterriza
-    if (activeCharacter.position.y <= activeCharacter.groundY) {
-      activeCharacter.position.y = activeCharacter.groundY;
-      isJumping = false;
-      verticalVelocity = 0;
+      // si ha llegado o pasado su altura de suelo, aterriza
+      if (character.position.y <= character.groundY) {
+        character.position.y = character.groundY;
+        character.isJumping = false;
+        character.verticalVelocity = 0;
+      }
     }
-  }
+  });
 
   // animación de las hélices  y la luz indicadora del dron
   // rotación continua de las hélices sobre su propio eje vertical
