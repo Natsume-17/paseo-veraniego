@@ -95,9 +95,12 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "ArrowUp" || event.code === "KeyW") {
     if (activeCharacter === droneCharacter) {
       // evita que cuando se elija el dron pueda saltar
-    } else if (!isJumping) {
-      verticalVelocity = 0.15; // impulso inicial hacia arriba
-      isJumping = true;
+    } else if (
+      !activeCharacter.isJumping &&
+      !(keysPressed["ArrowDown"] || keysPressed["KeyS"])
+    ) {
+      activeCharacter.verticalVelocity = 0.15; // impulso inicial hacia arriba
+      activeCharacter.isJumping = true;
     }
   }
 });
@@ -167,7 +170,7 @@ function animate() {
   }
 
   // animaciones del personaje persona (piernas y brazos) según su estado
-  if (isJumping && activeCharacter === personCharacter) {
+  if (activeCharacter.isJumping && activeCharacter === personCharacter) {
     // piernas recogidas (rotación fija hacia atrás)
     personCharacter.legLeft.rotation.x = 0.65;
     personCharacter.legRight.rotation.x = 0.65;
@@ -193,9 +196,11 @@ function animate() {
     activeCharacter === personCharacter &&
     (keysPressed["KeyS"] || keysPressed["ArrowDown"])
   ) {
-    // brazos ligeramente recogidos hacia el cuerpo (piernas ya se comprimen con scale.y)
+    // brazos ligeramente recogidos hacia el cuerpo y piernas rectas (pose de agachado)
     personCharacter.armLeft.rotation.x = -0.5;
     personCharacter.armRight.rotation.x = -0.5;
+    personCharacter.legLeft.rotation.x = 0;
+    personCharacter.legRight.rotation.x = 0;
   } else {
     // si no se mueve, todo vuelve a su posición neutral (0)
     personCharacter.legLeft.rotation.x = 0;
@@ -205,7 +210,7 @@ function animate() {
   }
 
   // animaciones del personaje gato (patas y cola) según su estado
-  if (isJumping && activeCharacter === catCharacter) {
+  if (activeCharacter.isJumping && activeCharacter === catCharacter) {
     // las cuatro patas recogidas hacia el cuerpo, mismo signo (pose simétrica)
     catCharacter.legFrontLeft.rotation.z = 0.25;
     catCharacter.legBackRight.rotation.z = 0.25;
@@ -261,14 +266,23 @@ function animate() {
   const crouchScale = 0.6; // reduce la altura al 60 %
 
   if (activeCharacter === personCharacter) {
-    if (keysPressed["KeyS"] || keysPressed["ArrowDown"]) {
+    if (
+      !activeCharacter.isJumping &&
+      (keysPressed["KeyS"] || keysPressed["ArrowDown"])
+    ) {
       activeCharacter.scale.y = crouchScale;
       // ajusta la posición para que los pies sigan en el suelo
       activeCharacter.position.y = activeCharacter.groundY * crouchScale;
-    } else if (!isJumping) {
+    } else if (!activeCharacter.isJumping) {
       // solo resetea si no está saltando
       activeCharacter.scale.y = 1;
       activeCharacter.position.y = activeCharacter.groundY;
+    }
+  } else {
+    // person no está activo: si estaba agachado (y no saltando), se restablece la escala y posición
+    if (!personCharacter.isJumping) {
+      personCharacter.scale.y = 1;
+      personCharacter.position.y = personCharacter.groundY;
     }
   }
 
