@@ -1,3 +1,7 @@
+/**
+ * Estilos globales: base del documento y pantalla de título
+ */
+
 :root {
   color-scheme: dark;
 }
@@ -16,4 +20,14 @@ body {
 canvas {
   image-rendering: pixelated; /* evita el suavizado al escalar el canvas de baja resolución (clave para el efecto pixel art) */
   display: block; /* elimina el pequeño espacio debajo, ya que canvas es display: inline por defecto */
+}
+
+/* Estilos para la pantalla de título */
+#title-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #7ec8e3, #fb8500);
+  width: 100%;
 }
