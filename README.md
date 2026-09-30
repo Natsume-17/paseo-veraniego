@@ -2,16 +2,44 @@
 
 Proyecto personal de portfolio: una experiencia interactiva de exploración con estética pixel art / retro 2.5D, desarrollada con Three.js.
 
+🚧 En desarrollo.
+
+## Cómo ejecutar el proyecto
+
+```bash
+npm install
+npm run dev
+```
+
+Después, abre `localhost:5173` en el navegador.
+
+## Controles
+
+| Acción    | Teclas    | Personajes     |
+| --------- | --------- | -------------- |
+| Izquierda | `A` / `←` | Todos          |
+| Derecha   | `D` / `→` | Todos          |
+| Arriba    | `W` / `↑` | Dron           |
+| Abajo     | `S` / `↓` | Dron           |
+| Saltar    | `W` / `↑` | Persona y gato |
+| Agacharse | `S` / `↓` | Persona        |
+
 ## Tecnologías
 
 - Three.js
 - Vite
+- JavaScript
+- HTML5
+- CSS3
 
 ## Arquitectura / organización del código
 
+- `main.js`: gestiona la inicialización de la exploración con `startExploration`.
 - `colors.js`: paleta de colores centralizada, organizada por categorías (entorno, faro, personajes).
 - `sizing.js`: gestiona el ajuste del tamaño del canvas a la ventana, manteniendo el aspect ratio fijo.
 - `characters/`: un archivo por personaje (`person.js`, `cat.js`, `drone.js`), cada uno con una función `createXCharacter(colors, gradientMap)` que construye y devuelve un `THREE.Group`.
+- `input.js`: gestiona el estado de las teclas pulsadas en cada momento.
+- `titleScreen.js`: gestiona la pantalla de título para seleccionar a un personaje.
 
 ## Progreso
 
@@ -45,4 +73,9 @@ Proyecto personal de portfolio: una experiencia interactiva de exploración con 
 - Rasgos faciales resueltos con `PlaneGeometry`, orientados según la cara visible de cada personaje
 - Los tres personajes coexisten en la escena de prueba, apoyados correctamente sobre el suelo
 
-🚧 En desarrollo.
+### Fase 5 — Movimiento
+
+- Teclas definidas para movimiento lateral, salto (en `person` y en `cat`) y agachado (solo en `person`), y `drone` se mueve arriba y abajo (no salta ni se agacha)
+- Animaciones de los movimientos, incluyendo las de algunas partes de los personajes por separado
+- Gravedad implementada para darle realismo al salto
+- Pantalla de título (`titleScreen.js`) para la selección del personaje (`activeCharacter`); solo se elige uno, ya no aparecen los tres en escena
