@@ -53,8 +53,12 @@ const characterStartY = {
   drone: 1.5,
 };
 
+// --- FUNCIÓN PRINCIPAL ---
 // inicializa la primera escena con el personaje elegido
 function startExploration(chosenCharacter) {
+  const app = document.getElementById("app");
+  // impide que la pantalla de título se cuele en la primera escena
+  app.innerHTML = "";
   const scene = new THREE.Scene();
   const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
   const moveSpeed = 0.02;
