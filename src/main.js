@@ -1,15 +1,17 @@
 /**
  * Paseo veraniego
  * ----------------
- * Punto de entrada de la aplicación. Configura la escena 3D y arranca
- * el bucle de animación.
+ * Punto de entrada de la aplicación. Muestra la pantalla de título y,
+ * al elegir personaje, configura la escena 3D y arranca el bucle de animación.
  *
  * Responsabilidades:
+ * - Mostrar la pantalla de título y recibir el personaje elegido (titleScreen.js).
  * - Inicializar Scene, Camera y Renderer.
- * - Crear los objetos de la escena (personaje, suelo, cielo) y sus materiales.
+ * - Crear el personaje elegido y los objetos de la escena (suelo, cielo) y sus materiales.
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
- * - Ejecutar el bucle de animación (animate).
+ * - Consultar las acciones del jugador mediante input.js.
+ * - Ejecutar el bucle de animación (movimiento, salto, gravedad y animaciones).
  */
 
 import "./style.css";
@@ -19,7 +21,7 @@ import { updateCanvasSize } from "./sizing.js";
 import { createPersonCharacter } from "./characters/person.js";
 import { createCatCharacter } from "./characters/cat.js";
 import { createDroneCharacter } from "./characters/drone.js";
-import { keysPressed } from "./input.js";
+import { isActionPressed, isActionKey } from "./input.js";
 import { showTitleScreen } from "./titleScreen.js";
 
 // Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
@@ -103,13 +105,13 @@ function startExploration(chosenCharacter) {
   let tailCycle = 0; // controla la oscilación de la cola, avanza siempre que Cat esté activo
 
   window.addEventListener("keydown", (event) => {
-    if (event.code === "ArrowUp" || event.code === "KeyW") {
+    if (isActionKey(event.code, "up")) {
       // evita que cuando se elija el dron pueda saltar
       // solo saltan persona y gato, y solo si no están ya en el aire ni agachados
       if (
         chosenCharacter !== "drone" &&
         !activeCharacter.isJumping &&
-        !(keysPressed["ArrowDown"] || keysPressed["KeyS"])
+        !isActionPressed("down")
       ) {
         activeCharacter.verticalVelocity = 0.15; // impulso inicial hacia arriba
         activeCharacter.isJumping = true;
@@ -173,11 +175,11 @@ function startExploration(chosenCharacter) {
     requestAnimationFrame(animate);
 
     // movimiento lateral del personaje activo
-    if (keysPressed["KeyA"] || keysPressed["ArrowLeft"]) {
+    if (isActionPressed("left")) {
       activeCharacter.position.x -= moveSpeed;
     }
 
-    if (keysPressed["KeyD"] || keysPressed["ArrowRight"]) {
+    if (isActionPressed("right")) {
       activeCharacter.position.x += moveSpeed;
     }
 
@@ -191,10 +193,7 @@ function startExploration(chosenCharacter) {
       activeCharacter.armRight.rotation.x = -0.5;
     } else if (
       chosenCharacter === "person" &&
-      (keysPressed["KeyA"] ||
-        keysPressed["ArrowLeft"] ||
-        keysPressed["KeyD"] ||
-        keysPressed["ArrowRight"])
+      (isActionPressed("left") || isActionPressed("right"))
     ) {
       // avanza la fase de la oscilación
       walkCycle += 0.04;
@@ -204,10 +203,7 @@ function startExploration(chosenCharacter) {
       // aplica la oscilación a brazos en fase opuesta a las piernas del mismo lado
       activeCharacter.armLeft.rotation.x = -Math.sin(walkCycle) * 0.2;
       activeCharacter.armRight.rotation.x = Math.sin(walkCycle) * 0.2;
-    } else if (
-      chosenCharacter === "person" &&
-      (keysPressed["KeyS"] || keysPressed["ArrowDown"])
-    ) {
+    } else if (chosenCharacter === "person" && isActionPressed("down")) {
       // brazos ligeramente recogidos hacia el cuerpo y piernas rectas (pose de agachado)
       activeCharacter.armLeft.rotation.x = -0.5;
       activeCharacter.armRight.rotation.x = -0.5;
@@ -225,10 +221,7 @@ function startExploration(chosenCharacter) {
     const crouchScale = 0.6; // reduce la altura al 60 %
 
     if (chosenCharacter === "person") {
-      if (
-        !activeCharacter.isJumping &&
-        (keysPressed["KeyS"] || keysPressed["ArrowDown"])
-      ) {
+      if (!activeCharacter.isJumping && isActionPressed("down")) {
         activeCharacter.scale.y = crouchScale;
         // ajusta la posición para que los pies sigan en el suelo
         activeCharacter.position.y = activeCharacter.groundY * crouchScale;
@@ -250,10 +243,7 @@ function startExploration(chosenCharacter) {
       activeCharacter.tail.rotation.y = 0.25;
     } else if (
       chosenCharacter === "cat" &&
-      (keysPressed["KeyA"] ||
-        keysPressed["ArrowLeft"] ||
-        keysPressed["KeyD"] ||
-        keysPressed["ArrowRight"])
+      (isActionPressed("left") || isActionPressed("right"))
     ) {
       walkCycle += 0.1;
       // patas en patrón diagonal (delantera-izq + trasera-der en fase; delantera-der + trasera-izq en fase opuesta)
@@ -293,12 +283,12 @@ function startExploration(chosenCharacter) {
     const droneMaxY = 2.5;
 
     if (chosenCharacter === "drone") {
-      if (keysPressed["KeyW"] || keysPressed["ArrowUp"]) {
+      if (isActionPressed("up")) {
         if (activeCharacter.position.y < droneMaxY) {
           activeCharacter.position.y += moveSpeed;
         }
       }
-      if (keysPressed["KeyS"] || keysPressed["ArrowDown"]) {
+      if (isActionPressed("down")) {
         if (activeCharacter.position.y > droneMinY) {
           activeCharacter.position.y -= moveSpeed;
         }
