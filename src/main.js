@@ -7,11 +7,11 @@
  * Responsabilidades:
  * - Mostrar la pantalla de título y recibir el personaje elegido (titleScreen.js).
  * - Inicializar Scene, Camera y Renderer.
- * - Crear el personaje elegido y los objetos de la escena (suelo, cielo) y sus materiales.
+ * - Crear el personaje elegido, y los objetos de la escena y sus materiales.
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
  * - Consultar las acciones del jugador mediante input.js.
- * - Ejecutar el bucle de animación (movimiento, salto, gravedad y animaciones).
+ * - Decide a quién y cuándo llamar, dejando a player.js aplicar el cómo.
  */
 
 import "./style.css";
@@ -23,6 +23,14 @@ import { createCatCharacter } from "./characters/cat.js";
 import { createDroneCharacter } from "./characters/drone.js";
 import { isActionPressed, isActionKey } from "./input.js";
 import { showTitleScreen } from "./titleScreen.js";
+import {
+  moveHorizontally,
+  applyGravity,
+  jump,
+  moveVertically,
+  crouch,
+  initPhysics,
+} from "./player.js";
 
 // Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
 const gradientColors = new Uint8Array([0, 100, 180, 255]); // 4 bandas
@@ -35,13 +43,14 @@ const gradientMap = new THREE.DataTexture(
 gradientMap.magFilter = THREE.NearestFilter; // filtro que evita el suavizado entre píxeles de la textura
 gradientMap.needsUpdate = true; // avisa a Three.js de que la textura tiene datos nuevos que procesar
 
-// Mapeo de personajes a sus funciones de creación y colores
+// mapeo de personajes a sus funciones de creación y colores
 const characterFactories = {
   person: createPersonCharacter,
   cat: createCatCharacter,
   drone: createDroneCharacter,
 };
 
+// colores por personaje
 const characterColors = {
   person: colorsPerson,
   cat: colorsCat,
@@ -55,6 +64,13 @@ const characterStartY = {
   drone: 1.5,
 };
 
+// velocidad de movimiento de cada personaje
+const characterMoveSpeed = {
+  person: 0.02,
+  cat: 0.02,
+  drone: 0.02,
+};
+
 // --- FUNCIÓN PRINCIPAL ---
 // inicializa la primera escena con el personaje elegido
 function startExploration(chosenCharacter) {
@@ -63,7 +79,7 @@ function startExploration(chosenCharacter) {
   app.innerHTML = "";
   const scene = new THREE.Scene();
   const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
-  const moveSpeed = 0.02;
+  const moveSpeed = characterMoveSpeed[chosenCharacter];
   const startY = characterStartY[chosenCharacter];
 
   // Parámetros: fov, aspect ratio, near, far
@@ -82,20 +98,10 @@ function startExploration(chosenCharacter) {
     characterColors[chosenCharacter],
     gradientMap,
   );
-  // eleva el personaje para que pies/patas toquen el suelo (o vuele, en el dron)
-  activeCharacter.position.y = startY;
-  scene.add(activeCharacter);
 
-  // --- propiedades de salto y gravedad ---
-  // altura de suelo del personaje (para saber cuándo ha aterrizado)
-  activeCharacter.groundY = startY;
-  // velocidad vertical y estado de salto, solo para los personajes que saltan
-  // dron no las lleva a propósito: su isJumping queda undefined (falsy),
-  // así que el bloque de gravedad lo ignora automáticamente sin necesidad de un guard extra
-  if (chosenCharacter === "person" || chosenCharacter === "cat") {
-    activeCharacter.verticalVelocity = 0;
-    activeCharacter.isJumping = false;
-  }
+  // --- inicialización ---
+  initPhysics(activeCharacter, startY, chosenCharacter);
+  scene.add(activeCharacter);
 
   // --- variables globales ---
   const gravity = -0.01; // negativa, pequeña
@@ -104,18 +110,10 @@ function startExploration(chosenCharacter) {
   let walkCycle = 0; // controla la fase de la oscilación del caminar
   let tailCycle = 0; // controla la oscilación de la cola, avanza siempre que Cat esté activo
 
+  // --- salto ---
   window.addEventListener("keydown", (event) => {
     if (isActionKey(event.code, "up")) {
-      // evita que cuando se elija el dron pueda saltar
-      // solo saltan persona y gato, y solo si no están ya en el aire ni agachados
-      if (
-        chosenCharacter !== "drone" &&
-        !activeCharacter.isJumping &&
-        !isActionPressed("down")
-      ) {
-        activeCharacter.verticalVelocity = 0.15; // impulso inicial hacia arriba
-        activeCharacter.isJumping = true;
-      }
+      jump(activeCharacter, chosenCharacter);
     }
   });
 
@@ -175,13 +173,7 @@ function startExploration(chosenCharacter) {
     requestAnimationFrame(animate);
 
     // movimiento lateral del personaje activo
-    if (isActionPressed("left")) {
-      activeCharacter.position.x -= moveSpeed;
-    }
-
-    if (isActionPressed("right")) {
-      activeCharacter.position.x += moveSpeed;
-    }
+    moveHorizontally(activeCharacter, moveSpeed);
 
     // animaciones del personaje persona (piernas y brazos) según su estado
     if (activeCharacter.isJumping && chosenCharacter === "person") {
@@ -217,19 +209,9 @@ function startExploration(chosenCharacter) {
       activeCharacter.armRight.rotation.x = 0;
     }
 
-    // escala de agachado para el personaje persona
-    const crouchScale = 0.6; // reduce la altura al 60 %
-
+    // --- agachado ---
     if (chosenCharacter === "person") {
-      if (!activeCharacter.isJumping && isActionPressed("down")) {
-        activeCharacter.scale.y = crouchScale;
-        // ajusta la posición para que los pies sigan en el suelo
-        activeCharacter.position.y = activeCharacter.groundY * crouchScale;
-      } else if (!activeCharacter.isJumping) {
-        // solo resetea si no está saltando
-        activeCharacter.scale.y = 1;
-        activeCharacter.position.y = activeCharacter.groundY;
-      }
+      crouch(activeCharacter);
     }
 
     // animaciones del personaje gato (patas y cola) según su estado
@@ -265,37 +247,12 @@ function startExploration(chosenCharacter) {
       activeCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.25;
     }
 
-    // aplica la gravedad al personaje mientras salta
-    if (activeCharacter.isJumping) {
-      activeCharacter.verticalVelocity += gravity;
-      activeCharacter.position.y += activeCharacter.verticalVelocity;
+    // aplica la gravedad al personaje activo
+    applyGravity(activeCharacter, gravity);
 
-      // si ha llegado o pasado su altura de suelo, aterriza
-      if (activeCharacter.position.y <= activeCharacter.groundY) {
-        activeCharacter.position.y = activeCharacter.groundY;
-        activeCharacter.isJumping = false;
-        activeCharacter.verticalVelocity = 0;
-      }
-    }
-
-    // límites de altura del dron (para no subir/bajar sin límite)
-    const droneMinY = 0.8;
-    const droneMaxY = 2.5;
-
+    // --- movimiento vertical y animaciones del dron ---
     if (chosenCharacter === "drone") {
-      if (isActionPressed("up")) {
-        if (activeCharacter.position.y < droneMaxY) {
-          activeCharacter.position.y += moveSpeed;
-        }
-      }
-      if (isActionPressed("down")) {
-        if (activeCharacter.position.y > droneMinY) {
-          activeCharacter.position.y -= moveSpeed;
-        }
-      }
-    }
-
-    if (chosenCharacter === "drone") {
+      moveVertically(activeCharacter, moveSpeed);
       // animación de las hélices y la luz indicadora del dron
       // rotación continua de las hélices sobre su propio eje vertical
       activeCharacter.propellerRight.rotation.y += 0.3;
