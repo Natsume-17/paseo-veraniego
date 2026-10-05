@@ -79,6 +79,7 @@ export function createDroneCharacter(colorsDrone, gradientMap) {
   droneCharacter.propellerRight = propellerRight;
   droneCharacter.propellerLeft = propellerLeft;
   droneCharacter.indicatorLight = indicatorLight;
+  droneCharacter.blinkCounter = 0; // contador de frames para el parpadeo del dron
 
   return droneCharacter;
 }

@@ -147,6 +147,8 @@ export function createCatCharacter(colorsCat, gradientMap) {
   catCharacter.legBackLeft = legBackLeft;
   catCharacter.legBackRight = legBackRight;
   catCharacter.tail = tail;
+  catCharacter.walkCycle = 0; // controla la fase de la oscilación del caminar
+  catCharacter.tailCycle = 0; // controla la oscilación de la cola, avanza siempre que Cat esté activo
 
   return catCharacter;
 }

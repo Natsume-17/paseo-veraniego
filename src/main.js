@@ -11,7 +11,8 @@
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
  * - Consultar las acciones del jugador mediante input.js.
- * - Decide a quién y cuándo llamar, dejando a player.js aplicar el cómo.
+ * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo.
+ * - Delegar todas las animaciones de los personajes a animations.js.
  */
 
 import "./style.css";
@@ -21,7 +22,7 @@ import { updateCanvasSize } from "./sizing.js";
 import { createPersonCharacter } from "./characters/person.js";
 import { createCatCharacter } from "./characters/cat.js";
 import { createDroneCharacter } from "./characters/drone.js";
-import { isActionPressed, isActionKey } from "./input.js";
+import { isActionKey } from "./input.js";
 import { showTitleScreen } from "./titleScreen.js";
 import {
   moveHorizontally,
@@ -31,6 +32,7 @@ import {
   crouch,
   initPhysics,
 } from "./player.js";
+import { animateCat, animateDrone, animatePerson } from "./animations.js";
 
 // Textura de gradiente: cada valor representa un «escalón» de tono (de oscuro a claro)
 const gradientColors = new Uint8Array([0, 100, 180, 255]); // 4 bandas
@@ -50,7 +52,7 @@ const characterFactories = {
   drone: createDroneCharacter,
 };
 
-// colores por personaje
+// colores de cada personaje
 const characterColors = {
   person: colorsPerson,
   cat: colorsCat,
@@ -105,10 +107,6 @@ function startExploration(chosenCharacter) {
 
   // --- variables globales ---
   const gravity = -0.01; // negativa, pequeña
-  let blinkCounter = 0; // contador de frames para el parpadeo del dron
-  const blinkInterval = 30; // frames entre cada parpadeo (medio segundo a 60fps)
-  let walkCycle = 0; // controla la fase de la oscilación del caminar
-  let tailCycle = 0; // controla la oscilación de la cola, avanza siempre que Cat esté activo
 
   // --- salto ---
   window.addEventListener("keydown", (event) => {
@@ -172,100 +170,27 @@ function startExploration(chosenCharacter) {
   function animate() {
     requestAnimationFrame(animate);
 
-    // movimiento lateral del personaje activo
-    moveHorizontally(activeCharacter, moveSpeed);
-
-    // animaciones del personaje persona (piernas y brazos) según su estado
-    if (activeCharacter.isJumping && chosenCharacter === "person") {
-      // piernas recogidas (rotación fija hacia atrás)
-      activeCharacter.legLeft.rotation.x = 0.65;
-      activeCharacter.legRight.rotation.x = 0.65;
-      // brazos ligeramente elevados (rotación fija hacia adelante/arriba)
-      activeCharacter.armLeft.rotation.x = -0.5;
-      activeCharacter.armRight.rotation.x = -0.5;
-    } else if (
-      chosenCharacter === "person" &&
-      (isActionPressed("left") || isActionPressed("right"))
-    ) {
-      // avanza la fase de la oscilación
-      walkCycle += 0.04;
-      // aplica la oscilación a piernas en fase opuesta entre sí
-      activeCharacter.legLeft.rotation.x = Math.sin(walkCycle) * 0.2;
-      activeCharacter.legRight.rotation.x = -Math.sin(walkCycle) * 0.2;
-      // aplica la oscilación a brazos en fase opuesta a las piernas del mismo lado
-      activeCharacter.armLeft.rotation.x = -Math.sin(walkCycle) * 0.2;
-      activeCharacter.armRight.rotation.x = Math.sin(walkCycle) * 0.2;
-    } else if (chosenCharacter === "person" && isActionPressed("down")) {
-      // brazos ligeramente recogidos hacia el cuerpo y piernas rectas (pose de agachado)
-      activeCharacter.armLeft.rotation.x = -0.5;
-      activeCharacter.armRight.rotation.x = -0.5;
-      activeCharacter.legLeft.rotation.x = 0;
-      activeCharacter.legRight.rotation.x = 0;
-    } else if (chosenCharacter === "person") {
-      // si no se mueve, todo vuelve a su posición neutral (0)
-      activeCharacter.legLeft.rotation.x = 0;
-      activeCharacter.legRight.rotation.x = 0;
-      activeCharacter.armLeft.rotation.x = 0;
-      activeCharacter.armRight.rotation.x = 0;
-    }
-
-    // --- agachado ---
-    if (chosenCharacter === "person") {
-      crouch(activeCharacter);
-    }
-
-    // animaciones del personaje gato (patas y cola) según su estado
-    if (activeCharacter.isJumping && chosenCharacter === "cat") {
-      // las cuatro patas recogidas hacia el cuerpo, mismo signo (pose simétrica)
-      activeCharacter.legFrontLeft.rotation.z = 0.25;
-      activeCharacter.legBackRight.rotation.z = 0.25;
-      activeCharacter.legFrontRight.rotation.z = 0.25;
-      activeCharacter.legBackLeft.rotation.z = 0.25;
-      // cola elevada respecto a su ángulo base (-Math.PI / 6), fija (sin oscilación)
-      activeCharacter.tail.rotation.y = 0.25;
-    } else if (
-      chosenCharacter === "cat" &&
-      (isActionPressed("left") || isActionPressed("right"))
-    ) {
-      walkCycle += 0.1;
-      // patas en patrón diagonal (delantera-izq + trasera-der en fase; delantera-der + trasera-izq en fase opuesta)
-      activeCharacter.legFrontLeft.rotation.z = Math.sin(walkCycle) * 0.25;
-      activeCharacter.legBackRight.rotation.z = Math.sin(walkCycle) * 0.25;
-      activeCharacter.legFrontRight.rotation.z = -Math.sin(walkCycle) * 0.25;
-      activeCharacter.legBackLeft.rotation.z = -Math.sin(walkCycle) * 0.25;
-      // cola con oscilación más rápida/amplia al caminar
-      tailCycle += 0.12;
-      activeCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.5;
-    } else if (chosenCharacter === "cat") {
-      // neutral cuando Cat está activo pero no se mueve
-      activeCharacter.legFrontLeft.rotation.z = 0;
-      activeCharacter.legFrontRight.rotation.z = 0;
-      activeCharacter.legBackLeft.rotation.z = 0;
-      activeCharacter.legBackRight.rotation.z = 0;
-      // cola con oscilación lenta y sutil en reposo
-      tailCycle += 0.04;
-      activeCharacter.tail.rotation.y = Math.sin(tailCycle) * 0.25;
-    }
-
     // aplica la gravedad al personaje activo
     applyGravity(activeCharacter, gravity);
 
-    // --- movimiento vertical y animaciones del dron ---
+    // movimiento lateral del personaje activo
+    moveHorizontally(activeCharacter, moveSpeed);
+
+    // agachado y animaciones de la persona según su estado
+    if (chosenCharacter === "person") {
+      crouch(activeCharacter);
+      animatePerson(activeCharacter);
+    }
+
+    // animaciones del gato según su estado
+    if (chosenCharacter === "cat") {
+      animateCat(activeCharacter);
+    }
+
+    // movimiento vertical y animaciones del dron
     if (chosenCharacter === "drone") {
       moveVertically(activeCharacter, moveSpeed);
-      // animación de las hélices y la luz indicadora del dron
-      // rotación continua de las hélices sobre su propio eje vertical
-      activeCharacter.propellerRight.rotation.y += 0.3;
-      activeCharacter.propellerLeft.rotation.y += 0.3;
-
-      // incrementa el contador cada frame
-      blinkCounter++;
-      // si alcanza el intervalo, alterna visibilidad y resetea el contador
-      if (blinkCounter >= blinkInterval) {
-        activeCharacter.indicatorLight.visible =
-          !activeCharacter.indicatorLight.visible;
-        blinkCounter = 0;
-      }
+      animateDrone(activeCharacter);
     }
 
     renderer.render(scene, camera);

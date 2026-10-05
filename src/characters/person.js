@@ -147,6 +147,7 @@ export function createPersonCharacter(colorsPerson, gradientMap) {
   personCharacter.legRight = legRight;
   personCharacter.armLeft = armLeft;
   personCharacter.armRight = armRight;
+  personCharacter.walkCycle = 0; // controla la fase de la oscilación del caminar
 
   return personCharacter;
 }
