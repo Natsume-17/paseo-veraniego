@@ -73,17 +73,20 @@ const characterMoveSpeed = {
   drone: 0.02,
 };
 
-// --- FUNCIÓN PRINCIPAL ---
+// ===== FUNCIÓN PRINCIPAL =====
 // inicializa la primera escena con el personaje elegido
 function startExploration(chosenCharacter) {
   const app = document.getElementById("app");
   // impide que la pantalla de título se cuele en la primera escena
   app.innerHTML = "";
+
+  // ===== ESCENA Y CÁMARA =====
   const scene = new THREE.Scene();
   const fovHorizontalDeseado = 75; // en grados, el que se quiere mantener estable
-  const moveSpeed = characterMoveSpeed[chosenCharacter];
-  const startY = characterStartY[chosenCharacter];
-
+  const ASPECT_RATIO = 16 / 9; // relación de aspecto deseada (16:9)
+  const fovHorizontalRad = fovHorizontalDeseado * (Math.PI / 180); // convertir a radianes
+  const fovVerticalRad =
+    2 * Math.atan(Math.tan(fovHorizontalRad / 2) / ASPECT_RATIO); // calcular el fov vertical en radianes
   // Parámetros: fov, aspect ratio, near, far
   const camera = new THREE.PerspectiveCamera(
     fovHorizontalDeseado,
@@ -91,29 +94,16 @@ function startExploration(chosenCharacter) {
     0.1,
     1000,
   );
+
+  camera.fov = fovVerticalRad * (180 / Math.PI); // volver a grados
+  camera.aspect = ASPECT_RATIO;
   camera.position.set(0, 3, 8); // colocar la cámara un poco elevada y alejada
   camera.lookAt(0, 0, 0); // mirar al origen de coordenadas (donde está el personaje y el suelo)
+  camera.updateProjectionMatrix();
 
-  // --- personaje ---
-  // usa characterFactories y characterColors para crear solo el elegido
-  const activeCharacter = characterFactories[chosenCharacter](
-    characterColors[chosenCharacter],
-    gradientMap,
-  );
-
-  // --- inicialización ---
-  initPhysics(activeCharacter, startY, chosenCharacter);
-  scene.add(activeCharacter);
-
-  // --- variables globales ---
+  // ===== MUNDO =====
+  // --- datos ---
   const gravity = -0.01; // negativa, pequeña
-
-  // --- salto ---
-  window.addEventListener("keydown", (event) => {
-    if (isActionKey(event.code, "up")) {
-      jump(activeCharacter, chosenCharacter);
-    }
-  });
 
   // --- geometría y material del suelo ---
   // ancho, alto
@@ -140,20 +130,31 @@ function startExploration(chosenCharacter) {
   const ambientLight = new THREE.AmbientLight(colors.foam, 0.35); // suaviza zonas en sombra total
   scene.add(ambientLight);
 
+  // ===== PERSONAJE =====
+  const moveSpeed = characterMoveSpeed[chosenCharacter];
+  const startY = characterStartY[chosenCharacter];
+  // usa characterFactories y characterColors para crear solo el elegido
+  const activeCharacter = characterFactories[chosenCharacter](
+    characterColors[chosenCharacter],
+    gradientMap,
+  );
+
+  // --- inicialización ---
+  initPhysics(activeCharacter, startY, chosenCharacter);
+  scene.add(activeCharacter);
+
+  // --- salto ---
+  window.addEventListener("keydown", (event) => {
+    if (isActionKey(event.code, "up")) {
+      jump(activeCharacter, chosenCharacter);
+    }
+  });
+
+  // ===== RENDERIZADO =====
   // --- dibujado del canvas ---
   const renderer = new THREE.WebGLRenderer();
   const RENDER_WIDTH = 640;
   const RENDER_HEIGHT = 360;
-  const ASPECT_RATIO = 16 / 9; // relación de aspecto deseada (16:9)
-
-  camera.aspect = ASPECT_RATIO;
-
-  const fovHorizontalRad = fovHorizontalDeseado * (Math.PI / 180); // convertir a radianes
-  const fovVerticalRad =
-    2 * Math.atan(Math.tan(fovHorizontalRad / 2) / ASPECT_RATIO); // calcular el fov vertical en radianes
-  camera.fov = fovVerticalRad * (180 / Math.PI); // volver a grados
-
-  camera.updateProjectionMatrix();
 
   renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false); // tamaño fijo para mantener el efecto pixel art
   document.body.appendChild(renderer.domElement);
@@ -166,7 +167,7 @@ function startExploration(chosenCharacter) {
     updateCanvasSize(renderer, ASPECT_RATIO),
   );
 
-  // --- animación ---
+  // === BUCLE ===
   function animate() {
     requestAnimationFrame(animate);
 
