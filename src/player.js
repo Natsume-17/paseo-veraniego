@@ -10,6 +10,7 @@
  * - Mover el dron en vertical dentro de sus límites de altura.
  * - Gestionar el agachado (solo persona).
  * - Inicializar parámetros del personaje.
+ * - Gestionar los límites de la escena.
  */
 
 import { isActionPressed } from "./input.js";
@@ -103,4 +104,11 @@ export function crouch(character) {
     character.scale.y = 1;
     character.position.y = character.groundY;
   }
+}
+
+// --- límites de la escena ---
+export function applyLimits(character, minX, maxX) {
+  // el techo (maxX) se aplica con min y el suelo (minX) con max
+  // al combinarlas recortan un rango entre los dos límites
+  character.position.x = Math.max(minX, Math.min(maxX, character.position.x));
 }

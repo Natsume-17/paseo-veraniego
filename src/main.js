@@ -11,7 +11,7 @@
  * - Configurar la iluminación.
  * - Delegar el ajuste de tamaño del canvas en sizing.js.
  * - Consultar las acciones del jugador mediante input.js.
- * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo.
+ * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo y gestionar los límites de la escena.
  * - Delegar todas las animaciones de los personajes a animations.js.
  */
 
@@ -31,6 +31,7 @@ import {
   moveVertically,
   crouch,
   initPhysics,
+  applyLimits,
 } from "./player.js";
 import { animateCat, animateDrone, animatePerson } from "./animations.js";
 
@@ -90,7 +91,7 @@ function startExploration(chosenCharacter) {
   // Parámetros: fov, aspect ratio, near, far
   const camera = new THREE.PerspectiveCamera(
     fovHorizontalDeseado,
-    16 / 9,
+    ASPECT_RATIO,
     0.1,
     1000,
   );
@@ -104,6 +105,8 @@ function startExploration(chosenCharacter) {
   // ===== MUNDO =====
   // --- datos ---
   const gravity = -0.01; // negativa, pequeña
+  const minX = -5.5; // límite inferior de la escena
+  const maxX = 5.5; // límite superior de la escena
 
   // --- geometría y material del suelo ---
   // ancho, alto
@@ -176,6 +179,9 @@ function startExploration(chosenCharacter) {
 
     // movimiento lateral del personaje activo
     moveHorizontally(activeCharacter, moveSpeed);
+
+    // aplica los límites de la escena
+    applyLimits(activeCharacter, minX, maxX);
 
     // agachado y animaciones de la persona según su estado
     if (chosenCharacter === "person") {
