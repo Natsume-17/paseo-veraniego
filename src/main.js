@@ -13,7 +13,7 @@
  * - Consultar las acciones del jugador mediante input.js.
  * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo y gestionar los límites de la escena.
  * - Delegar todas las animaciones de los personajes a animations.js.
- * - Comprobación de colisiones con obstáculos.
+ * - Gestiona las hitboxes y las colisiones con obstáculos.
  */
 
 import "./style.css";
@@ -73,6 +73,14 @@ const characterMoveSpeed = {
   person: 0.02,
   cat: 0.02,
   drone: 0.02,
+};
+
+// hitbox de cada personaje: tamaño fijo de la caja de colisión y desplazamiento
+// vertical de su centro respecto al origen del personaje
+const characterHitbox = {
+  person: { width: 0.6, height: 1.6, depth: 0.32, offsetY: -0.1 },
+  cat: { width: 1.02, height: 0.635, depth: 0.26, offsetY: -0.0075 },
+  drone: { width: 0.76, height: 0.18, depth: 0.24, offsetY: -0.005 },
 };
 
 // ===== FUNCIÓN PRINCIPAL =====
@@ -184,6 +192,22 @@ function startExploration(chosenCharacter) {
     updateCanvasSize(renderer, ASPECT_RATIO),
   );
 
+  // ===== COLISIONES =====
+  // --- hitbox del personaje (objetos reutilizados en cada frame) ---
+  const hitbox = characterHitbox[chosenCharacter];
+  const hitboxSize = new THREE.Vector3(
+    hitbox.width,
+    hitbox.height,
+    hitbox.depth,
+  );
+  const hitboxCenter = new THREE.Vector3();
+
+  function updateCharacterBox() {
+    hitboxCenter.copy(activeCharacter.position);
+    hitboxCenter.y += hitbox.offsetY; // corrige que el origen no sea el centro
+    characterBox.setFromCenterAndSize(hitboxCenter, hitboxSize); // calcula a partir de la posición y de un tamaño fijo
+  }
+
   // === BUCLE ===
   function animate() {
     requestAnimationFrame(animate);
@@ -200,8 +224,8 @@ function startExploration(chosenCharacter) {
     // aplica los límites de la escena
     applyLimits(activeCharacter, minX, maxX);
 
-    // comprueba colisiones
-    characterBox.setFromObject(activeCharacter);
+    // comprueba colisiones horizontales
+    updateCharacterBox();
     if (characterBox.intersectsBox(obstacleBox)) {
       activeCharacter.position.x = previousX;
     }
@@ -219,7 +243,17 @@ function startExploration(chosenCharacter) {
 
     // movimiento vertical y animaciones del dron
     if (chosenCharacter === "drone") {
+      // posición antes de subir y bajar para volver atrás si hay colisión
+      const previousY = activeCharacter.position.y;
+
       moveVertically(activeCharacter, moveSpeed);
+
+      // comprueba colisiones verticales
+      updateCharacterBox();
+      if (characterBox.intersectsBox(obstacleBox)) {
+        activeCharacter.position.y = previousY;
+      }
+
       animateDrone(activeCharacter);
     }
 
