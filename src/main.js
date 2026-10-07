@@ -13,6 +13,7 @@
  * - Consultar las acciones del jugador mediante input.js.
  * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo y gestionar los límites de la escena.
  * - Delegar todas las animaciones de los personajes a animations.js.
+ * - Comprobación de colisiones con obstáculos.
  */
 
 import "./style.css";
@@ -116,7 +117,6 @@ function startExploration(chosenCharacter) {
     color: colors.sand,
     gradientMap: gradientMap, // la misma textura de gradiente que ya tenemos
   });
-
   const ground = new THREE.Mesh(groundGeometry, groundMaterial);
   // eje a rotar para que el plano quede horizontal
   ground.rotation.x = -Math.PI / 2; // 90 grados en radianes
@@ -132,6 +132,20 @@ function startExploration(chosenCharacter) {
   scene.add(light);
   const ambientLight = new THREE.AmbientLight(colors.foam, 0.35); // suaviza zonas en sombra total
   scene.add(ambientLight);
+
+  // --- obstáculo ---
+  const obstacleGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const obstacleMaterial = new THREE.MeshToonMaterial({
+    color: colors.stone,
+    gradientMap: gradientMap,
+  });
+  const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
+  obstacle.position.set(2, 0.5, 0);
+  scene.add(obstacle);
+
+  // --- obstáculo y personaje: caja de colisión ---
+  const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+  const characterBox = new THREE.Box3();
 
   // ===== PERSONAJE =====
   const moveSpeed = characterMoveSpeed[chosenCharacter];
@@ -177,11 +191,20 @@ function startExploration(chosenCharacter) {
     // aplica la gravedad al personaje activo
     applyGravity(activeCharacter, gravity);
 
+    // posición antes de mover para volver atrás si hay colisión
+    const previousX = activeCharacter.position.x;
+
     // movimiento lateral del personaje activo
     moveHorizontally(activeCharacter, moveSpeed);
 
     // aplica los límites de la escena
     applyLimits(activeCharacter, minX, maxX);
+
+    // comprueba colisiones
+    characterBox.setFromObject(activeCharacter);
+    if (characterBox.intersectsBox(obstacleBox)) {
+      activeCharacter.position.x = previousX;
+    }
 
     // agachado y animaciones de la persona según su estado
     if (chosenCharacter === "person") {
