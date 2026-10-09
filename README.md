@@ -34,12 +34,20 @@ Después, abre `localhost:5173` en el navegador.
 
 ## Arquitectura / organización del código
 
-- `main.js`: gestiona la inicialización de la exploración con `startExploration`.
+- `main.js`: gestiona la inicialización de la exploración con `startExploration`, el bucle de animación con `animate` y las colisiones.
 - `colors.js`: paleta de colores centralizada, organizada por categorías (entorno, faro, personajes).
 - `sizing.js`: gestiona el ajuste del tamaño del canvas a la ventana, manteniendo el aspect ratio fijo.
 - `characters/`: un archivo por personaje (`person.js`, `cat.js`, `drone.js`), cada uno con una función `createXCharacter(colors, gradientMap)` que construye y devuelve un `THREE.Group`.
 - `input.js`: gestiona el estado de las teclas pulsadas en cada momento.
 - `titleScreen.js`: gestiona la pantalla de título para seleccionar a un personaje.
+- `player.js`: gestiona el movimiento y la física del personaje jugador.
+- `animations.js`: gestiona las animaciones del personaje jugador.
+
+## Decisiones técnicas
+
+- Hitbox fija en lugar de calcularla con las piezas visibles, porque las animaciones (como las hélices del dron) cambiaban la caja cada frame y provocaban colisiones falsas.
+- Suelo dinámico en lugar de un `groundY` constante, porque cambia cuando hay obstáculos.
+- Tolerancia (`epsilon`) en lugar de redondear, porque permite comparar decimales y distingue entre apoyarse y chocar.
 
 ## Progreso
 
@@ -79,3 +87,11 @@ Después, abre `localhost:5173` en el navegador.
 - Animaciones de los movimientos, incluyendo las de algunas partes de los personajes por separado
 - Gravedad implementada para darle realismo al salto
 - Pantalla de título (`titleScreen.js`) para la selección del personaje (`activeCharacter`); solo se elige uno, ya no aparecen los tres en escena
+
+### Fase 6 — Colisiones
+
+- Límites laterales de la escena.
+- Obstáculo con detección de colisiones por cajas (`Box3`)
+- Hitbox propia por personaje, independiente de sus piezas animadas, que se adapta al agacharse
+- Colisión por ejes separados y aterrizaje sobre obstáculos
+- Suelo dinámico y gravedad que depende de si hay suelo debajo
