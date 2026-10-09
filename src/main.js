@@ -237,9 +237,6 @@ function startExploration(chosenCharacter) {
   function animate() {
     requestAnimationFrame(animate);
 
-    // posición previa a la caída
-    const yBeforeGravity = activeCharacter.position.y;
-
     // actualiza la altura de suelo del personaje según si está sobre el obstáculo o no
     if (chosenCharacter !== "drone") {
       updateGroundY();
@@ -247,17 +244,6 @@ function startExploration(chosenCharacter) {
 
     // aplica la gravedad al personaje activo
     applyGravity(activeCharacter, gravity);
-
-    // solo persona y gato tienen gravedad
-    if (chosenCharacter !== "drone") {
-      updateCharacterBox();
-      if (characterBox.intersectsBox(obstacleBox)) {
-        // valores al aterrizar sobre el obstáculo
-        activeCharacter.position.y = yBeforeGravity;
-        activeCharacter.verticalVelocity = 0;
-        activeCharacter.isJumping = false;
-      }
-    }
 
     // posición antes de mover para volver atrás si hay colisión
     const previousX = activeCharacter.position.x;
