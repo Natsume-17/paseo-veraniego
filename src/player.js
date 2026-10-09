@@ -5,10 +5,10 @@
  *
  * Responsabilidades:
  * - Mover al personaje en horizontal según las acciones del jugador (input.js).
- * - Aplicar la gravedad durante el salto y aterrizar al personaje.
+ * - Aplicar la gravedad durante el salto, la caída y el aterrizaje de persona y gato.
  * - Gestionar el salto (solo persona y gato).
  * - Mover el dron en vertical dentro de sus límites de altura.
- * - Gestionar el agachado (solo persona).
+ * - Gestionar el agachado en cualquier superficie (solo persona).
  * - Inicializar parámetros del personaje.
  * - Gestionar los límites de la escena.
  */
@@ -27,7 +27,16 @@ export function moveHorizontally(character, speed) {
 
 // --- gravedad ---
 export function applyGravity(character, gravity) {
-  // aplica la gravedad al personaje mientras salta
+  // evita que el dron sea afectado por la gravedad
+  if (character.verticalVelocity === undefined) {
+    return;
+  }
+
+  // si está por encima de su suelo actual, cuenta como en el aire
+  if (character.position.y > character.groundY) {
+    character.isJumping = true; // así jump() no permite doble salto mientras cae
+  }
+  // aplica la gravedad al personaje mientras salta y en la caída
   if (character.isJumping) {
     character.verticalVelocity += gravity;
     character.position.y += character.verticalVelocity;
@@ -56,7 +65,7 @@ export function jump(character, characterType) {
 
 // --- dron ---
 // límites de altura del dron (para no subir/bajar sin límite)
-const droneMinY = 0.8;
+const droneMinY = 0.5;
 const droneMaxY = 2.5;
 
 export function moveVertically(character, speed) {
@@ -79,8 +88,8 @@ export function initPhysics(character, groundY, characterType) {
   character.position.y = groundY;
 
   // solo persona y gato saltan
-  // dron no las lleva a propósito: su isJumping queda undefined (falsy),
-  // así que applyGravity lo ignora automáticamente
+  // el early return de applyGravity() excluye al dron,
+  // ya que no tiene verticalVelocity
   if (characterType === "person" || characterType === "cat") {
     character.verticalVelocity = 0;
     character.isJumping = false;
@@ -90,7 +99,7 @@ export function initPhysics(character, groundY, characterType) {
 // --- agachado ---
 const crouchScale = 0.6; // reduce la altura al 60 %
 
-export function crouch(character) {
+export function crouch(character, startY) {
   // mientras salta no debe cambiar la escala del personaje
   if (character.isJumping) {
     return;
@@ -99,7 +108,7 @@ export function crouch(character) {
   if (isActionPressed("down")) {
     character.scale.y = crouchScale;
     // los pies deben seguir en el suelo
-    character.position.y = character.groundY * crouchScale;
+    character.position.y = character.groundY - startY + startY * crouchScale;
   } else {
     character.scale.y = 1;
     character.position.y = character.groundY;

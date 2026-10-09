@@ -13,7 +13,7 @@
  * - Consultar las acciones del jugador mediante input.js.
  * - Decidir a quién y cuándo llamar, dejando a player.js aplicar el cómo y gestionar los límites de la escena.
  * - Delegar todas las animaciones de los personajes a animations.js.
- * - Gestiona las hitboxes y las colisiones con obstáculos.
+ * - Gestiona las hitboxes y las colisiones con obstáculos, además de calcular el suelo actual del personaje.
  */
 
 import "./style.css";
@@ -142,13 +142,18 @@ function startExploration(chosenCharacter) {
   scene.add(ambientLight);
 
   // --- obstáculo ---
-  const obstacleGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const obstacleSize = 0.75;
+  const obstacleGeometry = new THREE.BoxGeometry(
+    obstacleSize,
+    obstacleSize,
+    obstacleSize,
+  );
   const obstacleMaterial = new THREE.MeshToonMaterial({
     color: colors.stone,
     gradientMap: gradientMap,
   });
   const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-  obstacle.position.set(2, 0.5, 0);
+  obstacle.position.set(2, obstacleSize / 2, 0);
   scene.add(obstacle);
 
   // --- obstáculo y personaje: caja de colisión ---
@@ -194,6 +199,7 @@ function startExploration(chosenCharacter) {
 
   // ===== COLISIONES =====
   // --- hitbox del personaje (objetos reutilizados en cada frame) ---
+  const epsilon = 0.001; // margen para no confundir «tocar» con «chocar» (y para los decimales)
   const hitbox = characterHitbox[chosenCharacter];
   const hitboxSize = new THREE.Vector3(
     hitbox.width,
@@ -203,17 +209,55 @@ function startExploration(chosenCharacter) {
   const hitboxCenter = new THREE.Vector3();
 
   function updateCharacterBox() {
+    // la hitbox sigue la escala vertical del personaje (se achica al agacharse)
+    hitboxSize.y = hitbox.height * activeCharacter.scale.y;
     hitboxCenter.copy(activeCharacter.position);
-    hitboxCenter.y += hitbox.offsetY; // corrige que el origen no sea el centro
-    characterBox.setFromCenterAndSize(hitboxCenter, hitboxSize); // calcula a partir de la posición y de un tamaño fijo
+    hitboxCenter.y += hitbox.offsetY * activeCharacter.scale.y; // corrige que el origen no sea el centro
+    characterBox.setFromCenterAndSize(hitboxCenter, hitboxSize); // calcula a partir de la posición y del tamaño de la hitbox
+    // los pies de la caja quedan un margen por encima de los pies reales
+    characterBox.min.y += epsilon;
+  }
+
+  function updateGroundY() {
+    updateCharacterBox();
+    // si los pies del personaje están por encima de la parte superior del obstáculo
+    const feetAboveTop = characterBox.min.y >= obstacleBox.max.y - epsilon;
+    // si la hitbox del personaje se solapa con la del obstáculo,
+    // y sus pies están por encima de la parte superior, aterriza encima
+    const overlapsX =
+      characterBox.min.x < obstacleBox.max.x &&
+      obstacleBox.min.x < characterBox.max.x;
+
+    // si se cumplen ambas condiciones, aterriza sobre el obstáculo
+    activeCharacter.groundY =
+      overlapsX && feetAboveTop ? startY + obstacleSize : startY;
   }
 
   // === BUCLE ===
   function animate() {
     requestAnimationFrame(animate);
 
+    // posición previa a la caída
+    const yBeforeGravity = activeCharacter.position.y;
+
+    // actualiza la altura de suelo del personaje según si está sobre el obstáculo o no
+    if (chosenCharacter !== "drone") {
+      updateGroundY();
+    }
+
     // aplica la gravedad al personaje activo
     applyGravity(activeCharacter, gravity);
+
+    // solo persona y gato tienen gravedad
+    if (chosenCharacter !== "drone") {
+      updateCharacterBox();
+      if (characterBox.intersectsBox(obstacleBox)) {
+        // valores al aterrizar sobre el obstáculo
+        activeCharacter.position.y = yBeforeGravity;
+        activeCharacter.verticalVelocity = 0;
+        activeCharacter.isJumping = false;
+      }
+    }
 
     // posición antes de mover para volver atrás si hay colisión
     const previousX = activeCharacter.position.x;
@@ -232,7 +276,7 @@ function startExploration(chosenCharacter) {
 
     // agachado y animaciones de la persona según su estado
     if (chosenCharacter === "person") {
-      crouch(activeCharacter);
+      crouch(activeCharacter, startY);
       animatePerson(activeCharacter);
     }
 
